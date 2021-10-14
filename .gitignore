@@ -1,2 +1,5 @@
 cmake-build-*
 .idea
+/python/src/pymylib.egg-info/
+/python/build
+/python/dist

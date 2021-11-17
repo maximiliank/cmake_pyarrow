@@ -14,13 +14,15 @@ The following pybind11 type casters are added:
 see [pyarrow_casters.hpp](python/src/cpp/pyarrow_casters.hpp).
 
 It also shows how once can forward the columns of an `arrow::RecordBatch` to your own non `arrow` function, e.g. there
-wrapper to apply the following transformations:
+is a wrapper which applies the following transformations:
 
 | pyarrow Type                              |      Forwarded Type                    |
 |-------------------------------------------|:--------------------------------------:|
 | pyarrow.lib.DoubleArray                   |  std::span\<const double>              |
 | pyarrow.lib.StringArray                   |  std::vector\<std::string_view>        |
 | pyarrow.lib.ListArray[list<item: double>] | std::vector\<std::span\<const double>> |
+
+see [bindings.cpp](python/src/cpp/bindings.cpp).
 
 The [example](examples/example.py) shows how from a `pandas.DataFrame` an `pyarrow.RecordBatch` according to a specific
 schema can be extracted and the passed to the internal library via pybind11.
@@ -39,4 +41,4 @@ pip install dist/pymylib-0.0.1-cp39-cp39-linux_x86_64.whl
 Arrow
 -----
 
-In case you need to build the arrow library (and pyarrow) from source have a look at `buikd_arrow.sh`.
+In case you need to build the arrow library (and pyarrow) from source have a look at [build_arrow.sh](build_arrow.sh).

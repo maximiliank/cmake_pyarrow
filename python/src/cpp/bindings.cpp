@@ -24,7 +24,7 @@ namespace PyConversions {
         ret.reserve(array->length());
         for (int i = 0; i < array->length(); ++i)
         {
-            arrow::util::string_view sv = array->Value(i);
+            std::string_view sv = array->Value(i);
             ret.emplace_back(sv.begin(), sv.end());
         }
         return ret;

@@ -3,9 +3,12 @@ project(cmake_pyarrow)
 
 set(CMAKE_CXX_STANDARD 20)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
-set(Arrow_DIR /opt/arrow_6_0_0/lib/cmake/arrow)
-find_package(Arrow CONFIG REQUIRED)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+find_package(PyArrow REQUIRED)
+find_package(pybind11 REQUIRED)
 
 add_subdirectory(Source/MyLib)
 add_subdirectory(python)

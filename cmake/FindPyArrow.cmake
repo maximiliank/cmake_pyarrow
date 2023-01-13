@@ -1,6 +1,6 @@
-find_package(Python3 COMPONENTS Interpreter Development)
-message(STATUS "${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/find_pyarrow.py")
-execute_process(COMMAND "${Python3_EXECUTABLE}" ${CMAKE_SOURCE_DIR}/find_pyarrow.py
+find_package(Python COMPONENTS Interpreter Development)
+message(STATUS "Using python ${Python_EXECUTABLE}")
+execute_process(COMMAND "${Python_EXECUTABLE}" ${CMAKE_SOURCE_DIR}/python/find_pyarrow.py
         RESULT_VARIABLE STATUS
         OUTPUT_VARIABLE PYARROW_PATHS
         ERROR_VARIABLE ERROR
@@ -20,13 +20,22 @@ foreach(NameAndValue ${PYARROW_PATHS})
 endforeach()
 message(STATUS "${ARROW_INCLUDE_DIR} ${ARROW_LIB_PATH}")
 
-find_library(ARROW_LIB NAMES libarrow.so.1000
+set(_Arrow_KNOWN_VERSIONS ${Arrow_ADDITIONAL_VERSIONS}
+        "1000" "900" "800")
+set(_arrow_TEST_VERSIONS arrow)
+set(_pyarrow_TEST_VERSIONS arrow_python)
+foreach(version ${_Arrow_KNOWN_VERSIONS})
+    list(APPEND _arrow_TEST_VERSIONS "libarrow.so.${version}")
+    list(APPEND _pyarrow_TEST_VERSIONS "libarrow_python.so.${version}")
+endforeach()
+
+find_library(ARROW_LIB NAMES ${_arrow_TEST_VERSIONS}
         PATHS
         ${ARROW_LIB_PATH}
         NO_DEFAULT_PATH)
 message(STATUS "Found ${ARROW_LIB} in ${ARROW_LIB_PATH}")
 
-find_library(ARROW_PYTHON_LIB NAMES arrow_python
+find_library(ARROW_PYTHON_LIB NAMES ${_pyarrow_TEST_VERSIONS}
         PATHS
         ${ARROW_LIB_PATH}
         NO_DEFAULT_PATH)
@@ -52,6 +61,5 @@ set_target_properties(pyarrow::pyarrow PROPERTIES
 
 add_library(MyLib::pyarrow INTERFACE IMPORTED)
 set_property(TARGET MyLib::pyarrow PROPERTY
-        INTERFACE_LINK_LIBRARIES arrow::arrow pyarrow::pyarrow Python3::Module)
+        INTERFACE_LINK_LIBRARIES arrow::arrow pyarrow::pyarrow Python::Module)
 set_property(TARGET MyLib::pyarrow APPEND PROPERTY INTERFACE_COMPILE_DEFINITIONS _GLIBCXX_USE_CXX11_ABI=0)
-

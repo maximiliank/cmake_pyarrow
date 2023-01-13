@@ -28,18 +28,18 @@ add_custom_command(TARGET copyPackageFiles POST_BUILD
 add_dependencies(copyPackageFiles ${PYLIB_TARGET_NAME})
 
 add_custom_target(PyPackageBuild
-        COMMAND "${Python3_EXECUTABLE}" -m pip wheel .
+        COMMAND "${Python_EXECUTABLE}" -m pip wheel .
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         COMMENT "Building python wheel package"
         )
 add_dependencies(PyPackageBuild copyPackageFiles)
 
-execute_process(COMMAND "${Python3_EXECUTABLE}" getwheelname.py OUTPUT_VARIABLE PY_WHEELFILE
+execute_process(COMMAND "${Python_EXECUTABLE}" getwheelname.py OUTPUT_VARIABLE PY_WHEELFILE
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 message(STATUS "Detected Python wheel filename ${PY_WHEELFILE}")
 
 add_custom_target(PyPackageInstall
-        COMMAND "${Python3_EXECUTABLE}" -m pip install --upgrade --force-reinstall --no-deps "${PY_WHEELFILE}"
+        COMMAND "${Python_EXECUTABLE}" -m pip install --upgrade --force-reinstall --no-deps "${PY_WHEELFILE}"
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         COMMENT "Installing wheel file"
         )

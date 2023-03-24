@@ -36,7 +36,8 @@ namespace PyConversions {
             throw std::runtime_error("Could not convert arrow::ListArray including Null values "
                                      "to std::vector<...>");
         const auto& value_array = array->values();
-        if (value_array->type() == arrow::float64())
+        const auto value_type = value_array->type();
+        if (value_type->Equals(arrow::float64()))
         {
             std::vector<std::span<const double>> ret;
             ret.reserve(array->length());
@@ -78,8 +79,7 @@ struct Wrapper {
     template<typename F>
     static auto wrap(F&& f)
     {
-        static F fn = std::forward<F>(f);
-        return [](Args&&... args) {
+        return [fn = std::forward<F>(f)](Args&&... args) {
             return wrap_function_impl(fn,
                                       PyConversions::forwardToView(std::forward<Args>(args))...);
         };

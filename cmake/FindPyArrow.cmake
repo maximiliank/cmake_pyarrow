@@ -1,27 +1,38 @@
 find_package(Python COMPONENTS Interpreter Development)
+
 message(STATUS "Using python ${Python_EXECUTABLE}")
-execute_process(COMMAND "${Python_EXECUTABLE}" ${CMAKE_SOURCE_DIR}/python/find_pyarrow.py
-        RESULT_VARIABLE STATUS
-        OUTPUT_VARIABLE PYARROW_PATHS
-        ERROR_VARIABLE ERROR
-        ECHO_OUTPUT_VARIABLE
-        ECHO_ERROR_VARIABLE
-        )
-if(STATUS AND NOT STATUS EQUAL 0)
-    message(STATUS "FAILED: ${STATUS}\n${ERROR}")
+execute_process(COMMAND "${Python_EXECUTABLE}" "-c" "import pyarrow as pa; print(pa.get_include());"
+        RESULT_VARIABLE _PYARROW_SEARCH_SUCCESS
+        OUTPUT_VARIABLE PYARROW_INCLUDE_DIR
+        ERROR_VARIABLE _PYARROW_ERROR_VALUE
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+if(_PYARROW_SEARCH_SUCCESS AND NOT _PYARROW_SEARCH_SUCCESS EQUAL 0)
+    message(STATUS "FAILED: ${_PYARROW_SEARCH_SUCCESS}\n${_PYARROW_ERROR_VALUE}")
 endif()
 
-foreach(NameAndValue ${PYARROW_PATHS})
-    string(STRIP ${NameAndValue} NameAndValue)
-    string(REGEX MATCH "^[^=]+" Name ${NameAndValue})
-    string(REPLACE "${Name}=" "" Value ${NameAndValue})
-    set(${Name} "${Value}")
-    message(STATUS "Using ${Name} = ${Value}")
-endforeach()
-message(STATUS "${ARROW_INCLUDE_DIR} ${ARROW_LIB_PATH}")
+set(ARROW_INCLUDE_DIR ${PYARROW_INCLUDE_DIR})
+execute_process(COMMAND "${Python_EXECUTABLE}" "-c" "import pyarrow as pa; print(pa.get_library_dirs());"
+        RESULT_VARIABLE _PYARROW_SEARCH_SUCCESS
+        OUTPUT_VARIABLE _PYARROW_VALUES_OUTPUT
+        ERROR_VARIABLE _PYARROW_ERROR_VALUE
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+if(_PYARROW_SEARCH_SUCCESS AND NOT _PYARROW_SEARCH_SUCCESS EQUAL 0)
+    message(STATUS "FAILED: ${_PYARROW_SEARCH_SUCCESS}\n${_PYARROW_ERROR_VALUE}")
+endif()
+
+# convert to the path needed
+string(REGEX REPLACE "," ";" _PYARROW_VALUES ${_PYARROW_VALUES_OUTPUT})
+string(REGEX REPLACE "'" "" _PYARROW_VALUES ${_PYARROW_VALUES})
+string(REGEX REPLACE "\\]" "" _PYARROW_VALUES ${_PYARROW_VALUES})
+string(REGEX REPLACE "\\[" "" _PYARROW_VALUES ${_PYARROW_VALUES})
+list(GET _PYARROW_VALUES 0 ARROW_SEARCH_LIB_PATH)
+
+message(STATUS "include: ${PYARROW_INCLUDE_DIR} lib: ${ARROW_SEARCH_LIB_PATH}")
 
 set(_Arrow_KNOWN_VERSIONS ${Arrow_ADDITIONAL_VERSIONS}
-        "1000" "900" "800")
+        "1100" "1000" "900" "800")
 set(_arrow_TEST_VERSIONS arrow)
 set(_pyarrow_TEST_VERSIONS arrow_python)
 foreach(version ${_Arrow_KNOWN_VERSIONS})
@@ -31,17 +42,17 @@ endforeach()
 
 find_library(ARROW_LIB NAMES ${_arrow_TEST_VERSIONS}
         PATHS
-        ${ARROW_LIB_PATH}
+        ${ARROW_SEARCH_LIB_PATH}
         NO_DEFAULT_PATH)
-message(STATUS "Found ${ARROW_LIB} in ${ARROW_LIB_PATH}")
+message(STATUS "Found ${ARROW_LIB} in ${ARROW_SEARCH_LIB_PATH}")
 
 find_library(ARROW_PYTHON_LIB NAMES ${_pyarrow_TEST_VERSIONS}
         PATHS
-        ${ARROW_LIB_PATH}
+        ${ARROW_SEARCH_LIB_PATH}
         NO_DEFAULT_PATH)
-message(STATUS "Found ${ARROW_PYTHON_LIB} in ${ARROW_LIB_PATH}")
+message(STATUS "Found ${ARROW_PYTHON_LIB} in ${ARROW_SEARCH_LIB_PATH}")
 
-find_package_handle_standard_args(PyArrow REQUIRED_VARS ARROW_INCLUDE_DIR ARROW_LIB ARROW_PYTHON_LIB)
+find_package_handle_standard_args(PyArrow REQUIRED_VARS PYARROW_INCLUDE_DIR ARROW_LIB ARROW_PYTHON_LIB)
 
 get_filename_component(ARROW_SONAME ${ARROW_LIB} NAME)
 get_filename_component(PYARROW_SONAME ${ARROW_PYTHON_LIB} NAME)
